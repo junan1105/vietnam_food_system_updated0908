@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>安嘉菜單管理</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<main class="page-shell">
+  <a class="back-link" href="{{ url_for('admin_menu') }}">← 返回三家店面選擇</a>
+  <header class="page-header">
+    <p class="eyebrow">ADMIN MENU EDITOR</p>
+    <h1>菜單即時管理</h1>
+    <p>上傳圖片、修改菜名與介紹後按儲存，使用者頁重新整理即可更新。</p>
+  </header>
+
+  {% for shop_key, shop_name, items in shops %}
+  <section id="shop-{{ shop_key }}" class="order-form admin-menu-section">
+    <div class="admin-shop-header">
+      <h2>{{ shop_name }}</h2>
+      <form method="post" action="{{ url_for('create_menu_item', shop_key=shop_key) }}" data-preserve-menu-position>
+        <input type="hidden" name="return_to" value="{{ shop_key }}#shop-{{ shop_key }}">
+        <button class="status-button" type="submit">＋ 新增餐點</button>
+      </form>
+    </div>
+    <p class="admin-help">新增後會建立一筆「新餐點」，請立即填寫菜名、越南文、價格、介紹與圖片後儲存。</p>
+
+    {% for item in items %}
+    <form id="menu-item-{{ item['id'] }}" class="menu-edit-form" method="post" action="{{ url_for('edit_menu_item', menu_id=item['id']) }}" enctype="multipart/form-data" data-preserve-menu-position>
+      <input type="hidden" name="return_to" value="{{ shop_key }}#menu-item-{{ item['id'] }}">
+      <img class="admin-menu-photo menu-image-preview" src="{{ item['image_url'] or url_for('static', filename=item['admin_photo_file']) }}?v={{ (item['updated_at'] or '')|replace('/', '')|replace(' ', '')|replace(':', '')|replace('.', '') }}" alt="{{ item['name'] }} 的餐點圖片預覽">
+      <div class="admin-fields">
+        <label>中文菜名<input name="name" value="{{ item['name'] }}" required></label>
+        <label>越南文菜名<input name="vi_name" value="{{ item['vi_name'] }}" required></label>
+        <label>歸類／Phân loại<select name="category" required>{% for category, category_label in category_options.get(shop_key, ()) %}<option value="{{ category }}" {% if item['category'] == category %}selected{% endif %}>{{ category_label }}</option>{% endfor %}</select></label>
+        <label>地區／起源／Vùng miền - nguồn gốc<select name="region" required>{% for region in region_options %}<option value="{{ region }}" {% if item['region'] == region %}selected{% endif %}>{{ region }}／{{ region_vi_labels.get(region, '') }}</option>{% endfor %}</select></label>
+        <label>推薦標示／Nhãn đề cử<select name="recommendation_tag">{% for tag in recommendation_options %}<option value="{{ tag }}" {% if (item['recommendation_tag'] or '') == tag %}selected{% endif %}>{{ tag or '不顯示' }}／{{ recommendation_vi_labels.get(tag, '') }}</option>{% endfor %}</select></label>
+        <label>供應狀態／Tình trạng phục vụ<select name="availability_status" required>{% for status in availability_options %}<option value="{{ status }}" {% if (item['availability_status'] or '供應中') == status %}selected{% endif %}>{{ status }}／{{ availability_vi_labels.get(status, '') }}</option>{% endfor %}</select></label>
+        <label>價格 NT$<input name="price" type="number" min="0" value="{{ item['price'] }}" required></label>
+        <p class="admin-help">目前點數兌換規則：<b>1 點 = NT${{ point_value }}</b>；免費換餐點所需點數由餐點價格自動計算並無條件進位。</p>
+        <label>中文介紹<textarea name="description">{{ item['description'] or descriptions.get(item['vi_name'], '') }}</textarea></label>
+        <label>越南文介紹<textarea name="vi_description">{{ item['vi_description'] or vi_descriptions.get(item['vi_name'], '') }}</textarea></label>
+        <input type="hidden" name="addon_editor_present" value="1">
+        <input type="hidden" name="addon_row_editor_present" value="1">
+        <input type="hidden" class="addon-visibility-json" name="addon_visibility_json" value="{}">
+        <details class="frontend-addon-preview">
+          <summary>前端目前加料／Thêm món（可編輯）</summary>
+          <p>可修改名稱、金額與顯示狀態；按「新增」可增加選項，按「刪除」可移除該選項。儲存後會同步顧客前端。</p>
+          <div class="addon-editor-list">
+            {% for addon_name, addon_price in item['frontend_addons'].items() %}
+            <div class="addon-editor-row">
+              <label>名稱／Tên<input class="addon-name" name="addon_name" value="{{ addon_name }}" maxlength="80"></label>
+              <label>金額 NT$<input class="addon-price" name="addon_price" type="number" min="0" max="1000" value="{{ addon_price }}"></label>
+              <label class="addon-visible-label"><input class="addon-visible" type="checkbox" {% if addon_name not in item['hidden_addons'] %}checked{% endif %}> 顯示於前端</label>
+              <button class="remove-addon-row" type="button">刪除</button>
+            </div>
+            {% endfor %}
+          </div>
+          <button class="add-addon-row" type="button">＋ 新增加料／Thêm món</button>
+        </details>
+        <label>上傳新圖片（JPG、JPEG、PNG、WEBP）<input class="menu-image-input" name="image" type="file" accept="image/jpeg,.jpg,.jpeg,image/png,.png,image/webp,.webp"></label>
+        <div class="admin-menu-actions">
+          <button class="status-button" type="submit">儲存餐點</button>
+          <button class="delete-menu-button" type="submit" formaction="{{ url_for('delete_menu_item', menu_id=item['id']) }}" formmethod="post" onclick="return confirm('確定要下架並刪除「{{ item['name'] }}」及其上傳的餐點圖片嗎？此操作不會刪除過去的訂單紀錄。');">下架商品／刪除圖片</button>
+        </div>
+      </div>
+    </form>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</main>
+<script>
+  document.querySelectorAll('[data-preserve-menu-position]').forEach((form) => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('an-gia-admin-menu-scroll-y', String(window.scrollY));
+    });
+  });
+
+  const savedMenuScrollY = sessionStorage.getItem('an-gia-admin-menu-scroll-y');
+  if (savedMenuScrollY !== null) {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: Number(savedMenuScrollY), left: 0, behavior: 'instant' });
+      sessionStorage.removeItem('an-gia-admin-menu-scroll-y');
+    });
+  }
+
+  document.querySelectorAll('.menu-image-input').forEach((input) => {
+    input.addEventListener('change', () => {
+      const image = input.closest('.menu-edit-form').querySelector('.menu-image-preview');
+      const file = input.files && input.files[0];
+      if (file) image.src = URL.createObjectURL(file);
+    });
+  });
+
+  document.querySelectorAll('.menu-edit-form').forEach((form) => {
+    const list = form.querySelector('.addon-editor-list');
+    const addButton = form.querySelector('.add-addon-row');
+    const visibilityField = form.querySelector('.addon-visibility-json');
+    if (!list || !addButton || !visibilityField) return;
+
+    const addRow = (name = '', price = 0, visible = true) => {
+      const row = document.createElement('div');
+      row.className = 'addon-editor-row';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = '名稱／Tên';
+      const nameInput = document.createElement('input');
+      nameInput.className = 'addon-name'; nameInput.name = 'addon_name'; nameInput.maxLength = 80; nameInput.value = name;
+      nameLabel.append(nameInput);
+      const priceLabel = document.createElement('label');
+      priceLabel.textContent = '金額 NT$';
+      const priceInput = document.createElement('input');
+      priceInput.className = 'addon-price'; priceInput.name = 'addon_price'; priceInput.type = 'number'; priceInput.min = 0; priceInput.max = 1000; priceInput.value = price;
+      priceLabel.append(priceInput);
+      const visibleLabel = document.createElement('label');
+      visibleLabel.className = 'addon-visible-label';
+      const visibleInput = document.createElement('input');
+      visibleInput.className = 'addon-visible'; visibleInput.type = 'checkbox'; visibleInput.checked = visible;
+      visibleLabel.append(visibleInput, document.createTextNode(' 顯示於前端'));
+      const removeButton = document.createElement('button');
+      removeButton.className = 'remove-addon-row'; removeButton.type = 'button'; removeButton.textContent = '刪除';
+      row.append(nameLabel, priceLabel, visibleLabel, removeButton);
+      list.append(row);
+    };
+
+    addButton.addEventListener('click', () => addRow());
+    list.addEventListener('click', (event) => {
+      if (event.target.classList.contains('remove-addon-row')) event.target.closest('.addon-editor-row').remove();
+    });
+    form.addEventListener('submit', () => {
+      const visibility = {};
+      list.querySelectorAll('.addon-editor-row').forEach((row) => {
+        const name = row.querySelector('.addon-name').value.trim();
+        if (name) visibility[name] = row.querySelector('.addon-visible').checked;
+      });
+      visibilityField.value = JSON.stringify(visibility);
+    });
+  });
+
+</script>
+<script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

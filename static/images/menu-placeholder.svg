@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360" role="img" aria-labelledby="title desc">
+  <title id="title">新增餐點圖片預覽</title>
+  <desc id="desc">尚未上傳照片的餐點圖片模型</desc>
+  <rect width="480" height="360" fill="#f4efe7"/>
+  <rect x="24" y="24" width="432" height="312" rx="24" fill="#fffaf4" stroke="#d9cbb9" stroke-width="4" stroke-dasharray="12 10"/>
+  <circle cx="240" cy="145" r="58" fill="#dfece4"/>
+  <path d="M205 158l24-28 20 22 16-16 26 31z" fill="#287a61"/>
+  <circle cx="215" cy="117" r="9" fill="#d94a43"/>
+  <text x="240" y="255" text-anchor="middle" font-family="Arial, 'Microsoft JhengHei', sans-serif" font-size="25" font-weight="700" fill="#287a61">新增餐點圖片預覽</text>
+  <text x="240" y="287" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#69736e">請選擇並上傳餐點照片</text>
+</svg>

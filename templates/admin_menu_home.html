@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>三家店面菜單管理｜安嘉後台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <a class="back-link" href="{{ url_for('admin') }}">← 返回安嘉後台管理首頁</a>
+    <header class="page-header">
+      <p class="eyebrow">ADMIN MENU EDITOR</p>
+      <h1>三家店面菜單管理</h1>
+      <p>請選擇要編輯的店家；各店會在獨立頁面管理餐點、圖片、價格與介紹。</p>
+    </header>
+    <section class="admin-choice-grid">
+      {% for key, shop in shops.items() %}
+      <a class="admin-choice" href="{{ url_for('admin_menu_shop', shop_key=key) }}">
+        <span>{{ shop.icon }}</span>
+        <h2>{{ shop.name }}</h2>
+        <p>{{ shop.vi_name }}<br>進入此店的菜單即時管理 →</p>
+      </a>
+      {% endfor %}
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

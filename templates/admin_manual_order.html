@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>人工點餐模式｜安嘉後台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <a class="back-link" href="{{ url_for('admin') }}">← 返回安嘉後台管理首頁</a>
+    <header class="page-header">
+      <p class="eyebrow">WALK-IN ORDER</p>
+      <h1>人工點餐模式</h1>
+      <p>提供沒有攜帶手機的現場顧客使用；建立後會直接出現在今日外帶訂單管理。</p>
+    </header>
+
+    {% if promotion_active %}
+    <section class="promotion-banner"><strong>今日全品項 9 折優惠已啟用</strong><span>人工訂單也會自動套用優惠。</span></section>
+    {% endif %}
+
+    <form class="manual-shop-picker" method="get">
+      <label for="shop_key">選擇店家</label>
+      <select id="shop_key" name="shop_key" onchange="this.form.submit()">
+        {% for key, shop in shops.items() %}<option value="{{ key }}" {% if key == shop_key %}selected{% endif %}>{{ shop.name }}／{{ shop.vi_name }}</option>{% endfor %}
+      </select>
+      <noscript><button class="status-button">切換店家</button></noscript>
+    </form>
+
+    <form method="post" id="manual-order-form">
+      <input type="hidden" name="shop_key" value="{{ shop_key }}">
+      <section class="order-form">
+        <h2>加入餐點</h2>
+        {% for category, items in menu|groupby('category') %}
+        <section class="menu-section">
+          <h3>{{ category }}</h3>
+          <div class="manual-menu-list">
+          {% for item in items %}
+            <article class="manual-menu-item">
+              <div><strong>{{ item['name'] }}</strong><span>{{ item['vi_name'] }}</span><b>NT${{ item['price'] }}</b></div>
+              <div class="manual-item-controls">
+                <label>加料（可複選）
+                  <select class="manual-addons" multiple size="3">
+                    {% for name, price in addons.items() %}<option value="{{ name }}">{{ name }}{% if price %} NT${{ price }}{% endif %}</option>{% endfor %}
+                  </select>
+                </label>
+                <label>備註<input class="manual-note" maxlength="100" placeholder="選填"></label>
+                <label>數量<input class="manual-quantity" type="number" min="1" max="20" value="1"></label>
+                <button class="add-item" type="button" data-id="{{ item['id'] }}" data-name="{{ item['name'] }} ({{ item['vi_name'] }})" data-price="{{ item['price'] }}">加入訂單</button>
+              </div>
+            </article>
+          {% endfor %}
+          </div>
+        </section>
+        {% endfor %}
+      </section>
+
+      <section class="order-form">
+        <h2>本次人工訂單</h2>
+        <div id="manual-cart-list">尚未加入餐點。</div>
+        <p class="cart-total">合計：<b id="manual-cart-total">NT$0</b></p>
+        <input id="manual-cart" name="cart" type="hidden">
+        <label for="customer_name">取餐姓名（選填）</label>
+        <input id="customer_name" name="customer_name" placeholder="未填寫時顯示「現場顧客」">
+        <label for="member_phone">會員手機號碼（選填）</label>
+        <input id="member_phone" name="member_phone" inputmode="tel" autocomplete="tel" pattern="[0-9+ -]{8,20}" placeholder="填寫已註冊手機即可累積點數">
+        <p class="member-points-note">會員消費每 NT$50 累積 1 點，未滿 NT$50 無條件進位；1 點可折抵 NT$1。</p>
+        <label for="pay_method">付款方式／Thanh toán</label>
+        <input id="pay_method" name="pay_method" value="現金／Tiền mặt" readonly>
+        <label for="payment_status">付款狀態</label>
+        <select id="payment_status" name="payment_status"><option selected>已付款</option><option>待付款</option></select>
+        <label for="status">製作狀態</label>
+        <select id="status" name="status">{% for status in statuses %}<option>{{ status }}</option>{% endfor %}</select>
+        <button class="button button-primary" type="submit">建立人工外帶訂單</button>
+      </section>
+    </form>
+  </main>
+  <script>
+    const addons={{ addons|tojson }}, cart=[];
+    const list=document.querySelector('#manual-cart-list'), total=document.querySelector('#manual-cart-total'), hidden=document.querySelector('#manual-cart');
+    function renderCart(){
+      hidden.value=JSON.stringify(cart.map(({food_id,quantity,addon_names,note})=>({food_id,quantity,addon_names,note})));
+      list.innerHTML=cart.length ? cart.map((x,index)=>`<div class="cart-row"><span>${x.name} × ${x.quantity}<small>${x.addon_names.join('、') || '無加料／Không thêm'}${x.note ? '；備註：'+x.note : ''}</small></span><button type="button" data-remove="${index}">移除</button></div>`).join('') : '尚未加入餐點。';
+      const rawTotal=cart.reduce((sum,x)=>sum+(x.price+x.addon_names.reduce((amount,name)=>amount+(addons[name]||0),0))*x.quantity,0);
+      const finalTotal={{ "cart.reduce((sum,x)=>sum+Math.round((x.price+x.addon_names.reduce((amount,name)=>amount+(addons[name]||0),0))*0.9)*x.quantity,0)" if promotion_active else 'rawTotal' }};
+      total.textContent='NT$'+finalTotal;
+    }
+    document.querySelectorAll('.add-item').forEach(button=>button.addEventListener('click',()=>{
+      const item=button.closest('.manual-menu-item');
+      const quantity=Math.max(1,Math.min(20,Math.floor(Number(item.querySelector('.manual-quantity').value)||1)));
+      const addon_names=[...item.querySelector('.manual-addons').selectedOptions].map(option=>option.value);
+      cart.push({food_id:Number(button.dataset.id),name:button.dataset.name,price:Number(button.dataset.price),quantity,addon_names,note:item.querySelector('.manual-note').value.trim()});
+      renderCart();
+    }));
+    list.addEventListener('click',event=>{if(event.target.dataset.remove!==undefined){cart.splice(Number(event.target.dataset.remove),1);renderCart();}});
+    document.querySelector('#manual-order-form').addEventListener('submit',event=>{if(!cart.length){event.preventDefault();alert('請先加入至少一項餐點。');}});
+  </script>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

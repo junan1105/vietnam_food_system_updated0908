@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>安嘉之越南美食品在淡水｜點餐系統</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=homepage-background-v6">
+  <style>
+    body.market-page {
+      background: linear-gradient(rgb(255 250 243 / .35), rgb(248 244 235 / .48)), url("{{ url_for('static', filename='images/homepage-background.png') }}") center / cover fixed no-repeat;
+    }
+  </style>
+</head>
+<body class="market-page">
+  <main class="page-shell">
+    <header class="brand-hero">
+      <p class="welcome-message">歡迎來到安嘉之越南美食品在淡水點餐系統！</p>
+      <p class="eyebrow">Ẩm thực Việt Nam tại Tamsui</p>
+      <h1>安嘉之越南美食品在淡水</h1>
+      <p class="brand-vi">Thương hiệu Tuấn An và Dịch Gia</p>
+      <p>選擇一家店鋪，開始您的外帶點餐。</p>
+      <p class="language-note">本系統使用繁體中文與越南文；越南文以南越用語為主，若有北越用語會以括號標示。<br>Tiếng Việt dùng cách gọi miền Nam; món miền Bắc có ghi chú trong ngoặc.</p>
+    </header>
+    <section class="account-home" aria-label="會員帳號">
+      {% if customer %}
+        <div>
+          <strong>您好，{{ customer.name }}</strong>
+          <span>已登入／Đã đăng nhập</span>
+          <span>目前點數／Điểm hiện có：{{ customer.points|default(0) }} 點</span>
+        </div>
+        {% if not customer.welcome_points_claimed %}
+        <form method="post" action="{{ url_for('claim_welcome_points') }}"><button type="submit">領取會員禮 10 點<br>Nhận quà 10 điểm</button></form>
+        {% endif %}
+        <a class="account-link" href="{{ url_for('my_orders') }}">我的外帶訂單</a>
+        <form method="post" action="{{ url_for('logout_account') }}"><button type="submit">登出</button></form>
+      {% else %}
+        <div><strong>會員帳號</strong><span>註冊後可快速帶入取餐資料／Đăng ký để đặt món nhanh hơn</span></div>
+        <a class="account-link" href="{{ url_for('login_account') }}">登入</a>
+        <a class="account-link account-register-link" href="{{ url_for('register_account') }}">註冊帳號</a>
+      {% endif %}
+    </section>
+    {% set videos = {'pho': 'https://www.youtube.com/watch?v=JGUAufy9-1E', 'banh-mi': 'https://www.youtube.com/watch?v=1fG7qYJl09k', 'drinks': 'https://www.youtube.com/watch?v=JDKAaQMsEnw'} %}
+    <a class="my-orders-home" href="{{ url_for('public_daily_sales') }}">每日餐點銷量／Doanh số món ăn hằng ngày</a>
+    <section class="shop-grid">
+      {% for key, shop in shops.items() %}
+      <div class="shop-option">
+      <a class="shop-card" href="{{ url_for('order', shop_key=key) }}">
+        <span class="shop-icon">{{ shop.icon }}</span>
+        <h2>{{ shop.name }}</h2>
+        <p class="shop-vi">{{ shop.vi_name }}</p>
+        <p>{{ shop.tagline }}</p>
+        <span class="shop-link">選擇餐點／Xem thực đơn →</span>
+      </a>
+      <a class="video-link" href="{{ videos[key] }}" target="_blank" rel="noopener">觀看介紹影片／Xem video ↗</a>
+      </div>
+      {% endfor %}
+    </section>
+    <section class="ai-chat" aria-labelledby="ai-chat-title">
+      <div class="ai-chat-heading">
+        <span aria-hidden="true">🤖</span>
+        <div>
+          <h2 id="ai-chat-title">安嘉 AI 越南美食導覽／Hướng dẫn Ẩm thực Việt Nam</h2>
+          <p>詢問越南美食、文化、點餐搭配或南北用語。／Hỏi về ẩm thực, văn hóa và du lịch Việt Nam.</p>
+        </div>
+      </div>
+      <div id="chat-messages" class="chat-messages" aria-live="polite">
+        <div class="chat-bubble bot">繁中：Xin chào！我是安嘉的越南美食導覽員。你可以問河粉、法國麵包、越南咖啡、食材與香草、南中北口味、點餐會話、素食與過敏原提醒、節慶文化、城市旅遊，或請我推薦餐點搭配。<br><br>Tiếng Việt: Xin chào! Tôi là hướng dẫn viên ẩm thực Việt Nam của An Gia. Bạn có thể hỏi về phở, bánh mì, cà phê, nguyên liệu và rau thơm, khẩu vị ba miền, câu giao tiếp khi gọi món, món chay, dị ứng, văn hóa lễ hội, du lịch và gợi ý món ăn.</div>
+      </div>
+      <div class="chat-suggestions" aria-label="建議問題">
+        <button type="button" data-prompt="越南河粉有什麼特色？">河粉特色／Phở</button>
+        <button type="button" data-prompt="推薦我一份越南料理">餐點推薦／Gợi ý</button>
+        <button type="button" data-prompt="越南咖啡怎麼喝？">越南咖啡／Cà phê</button>
+        <button type="button" data-prompt="越南有哪些飲食文化？">越南文化／Văn hóa</button>
+        <button type="button" data-prompt="北越、中越、南越料理的口味有什麼不同？">三地口味／Ba miền</button>
+        <button type="button" data-prompt="越南料理常見的香草和調味料有哪些？">香草食材／Rau thơm</button>
+        <button type="button" data-prompt="素食或有食物過敏時，如何用越南文點餐？">素食過敏／Dị ứng</button>
+        <button type="button" data-prompt="去越南旅遊時有哪些常用點餐會話？">點餐會話／Hội thoại</button>
+        <button type="button" data-prompt="推薦一套越南料理的前菜、主食和飲料搭配">套餐搭配／Gợi ý</button>
+      </div>
+      <form id="ai-chat-form" class="chat-form">
+        <label class="sr-only" for="ai-chat-input">和安嘉 AI 聊天</label>
+        <input id="ai-chat-input" maxlength="180" placeholder="例如：第一次吃越南菜，推薦什麼？" autocomplete="off">
+        <button type="submit">送出</button>
+      </form>
+      <div class="translator" aria-labelledby="translator-title">
+        <h3 id="translator-title">中越翻譯／Dịch Trung - Việt</h3>
+        <p>內建大量美食、食材、點餐、會話、文化與旅遊詞彙；翻成越南文時會優先顯示南越用語，若北越不同會一併標註。</p>
+        <a class="translate-button external-translate" href="https://immersivetranslate.com/zh-TW/translate/" target="_blank" rel="noopener noreferrer">開啟沉浸式翻譯／Mở Immersive Translate ↗</a>
+        <select id="translation-direction" aria-label="翻譯方向">
+          <option value="zh-vi">繁體中文 → 越南文</option>
+          <option value="vi-zh">Tiếng Việt → 繁體中文</option>
+        </select>
+        <textarea id="translation-input" rows="3" maxlength="160" placeholder="輸入想翻譯的文字，例如：木耳、不要香菜、謝謝、花生醬"></textarea>
+        <button id="translate-button" class="translate-button" type="button">翻譯／Dịch</button>
+        <div id="translation-result" class="translation-result" aria-live="polite">翻譯結果會顯示在這裡。／Kết quả dịch sẽ hiển thị ở đây.</div>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+  <script src="{{ url_for('static', filename='ai-chat.js') }}?v=10"></script>
+</body>
+</html>

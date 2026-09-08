@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <title>{% if is_history %}外帶訂單歷史紀錄{% else %}我的外帶訂單{% endif %}</title>
+</head>
+<body>
+  <main class="page-shell">
+    <a class="back-link" href="/">← 返回首頁</a>
+    <header class="page-header">
+      <h1>{% if is_history %}外帶訂單歷史紀錄{% else %}我的外帶訂單{% endif %}</h1>
+      <p>{% if is_history %}可用手機號碼與日期查看今天以前的訂單。{% else %}只顯示今天的外帶訂單。{% endif %}</p>
+    </header>
+
+    <form class="order-form" method="get">
+      <label>手機號碼
+        <input name="phone" value="{{ phone }}" required inputmode="tel" autocomplete="tel">
+      </label>
+      {% if is_history %}
+      <label>搜尋日期
+        <input type="date" name="date" value="{{ selected_date|default('') }}">
+      </label>
+      {% endif %}
+      <button class="button button-primary">{% if is_history %}搜尋歷史訂單{% else %}查詢今日訂單{% endif %}</button>
+    </form>
+
+    {% if searched %}
+    <p class="page-switch">
+      {% if is_history %}
+        <a href="{{ url_for('my_orders', phone=phone) }}">← 查看今天訂單</a>
+        {% if selected_date %}　<a href="{{ url_for('my_orders_history', phone=phone) }}">清除日期篩選</a>{% endif %}
+      {% else %}
+        <a href="{{ url_for('my_orders_history', phone=phone) }}">查看歷史紀錄 →</a>
+      {% endif %}
+    </p>
+    {% if not is_history %}
+    <p id="customer-live-order-status" class="live-order-status" aria-live="polite">即時訂單狀態已啟用，系統每 1 秒同步製作與付款狀態。</p>
+    {% endif %}
+
+    {% for group in order_groups %}
+    <section class="order-form">
+      <h2>{{ group['shop_name'] }}</h2>
+      <p><b>本店合計：</b>{{ group['count'] }} 單／NT${{ group['amount'] }}</p>
+      {% for order in group['orders'] %}
+      <div class="admin-order">
+        <p><b>{{ group['shop_name'] }}</b>　#{{ order['shop_order_number'] }}</p>
+        <p>下單時間：{{ order['created_at'] }}</p>
+        <p class="customer-order-status" data-order-id="{{ order['id'] }}">製作狀態：<span data-status>{{ order['status'] }}</span>　付款狀態：<span data-payment-status>{{ order['payment_status'] }}</span></p>
+        <div class="order-item-list">
+          <b>餐點明細 / Chi tiết món</b>
+          {% for item in items_by_order.get(order['id'], []) %}
+          <p>{{ item['item_name'] }} × {{ item['quantity'] }}　{{ item['addon_name'] }}　NT${{ item['line_total'] }}</p>
+          {% endfor %}
+        </div>
+        {% set exchange_points = order['points_exchange_points'] if order['points_exchange_points'] is defined else (order['points_exchange_count'] or 0) * 2 %}
+        {% set redemption_value = order['points_redemption_value'] if order['points_redemption_value'] is defined else (order['points_redeemed'] - exchange_points) %}
+        <p><b>餐點原價合計：</b>NT${{ order['subtotal_price'] if order['subtotal_price'] is not none else order['total_price'] + redemption_value }}{% if exchange_points %}　<b>免費兌換：</b>{{ order['points_exchange_count'] }} 樣／{{ exchange_points }} 點{% endif %}{% if redemption_value %}　<b>金額折抵：</b>-NT${{ redemption_value }}{% endif %}　<b>實付：</b>NT${{ order['total_price'] }}</p>
+      </div>
+      {% else %}
+      <p>{% if is_history %}此店沒有符合條件的歷史訂單。{% else %}此店今天目前沒有訂單。{% endif %}</p>
+      {% endfor %}
+    </section>
+    {% endfor %}
+    {% endif %}
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+  {% if searched and not is_history %}
+  <script>
+    (() => {
+      const phone = {{ phone|tojson }};
+      const endpoint = {{ url_for('my_orders_latest')|tojson }} + '?phone=' + encodeURIComponent(phone);
+      const notice = document.getElementById('customer-live-order-status');
+      let isChecking = false;
+
+      async function syncOrderStatuses() {
+        if (isChecking) return;
+        isChecking = true;
+        try {
+          const response = await fetch(endpoint, { cache: 'no-store' });
+          if (!response.ok) return;
+          const data = await response.json();
+          let updated = false;
+          for (const order of data.orders) {
+            const row = document.querySelector(`[data-order-id="${order.id}"]`);
+            if (!row) continue;
+            const status = row.querySelector('[data-status]');
+            const paymentStatus = row.querySelector('[data-payment-status]');
+            if (status && status.textContent !== order.status) {
+              status.textContent = order.status;
+              updated = true;
+            }
+            if (paymentStatus && paymentStatus.textContent !== order.payment_status) {
+              paymentStatus.textContent = order.payment_status;
+              updated = true;
+            }
+          }
+          if (updated && notice) {
+            notice.textContent = `訂單狀態已更新（${data.checked_at}）。`;
+          }
+        } catch (_) {
+          // Keep the order page readable if one polling request fails.
+        } finally {
+          isChecking = false;
+        }
+      }
+
+      window.setInterval(syncOrderStatuses, 1000);
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>

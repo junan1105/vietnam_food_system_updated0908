@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>點數兌換設定｜安嘉後台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <a class="back-link" href="{{ url_for('admin') }}">← 返回安嘉後台管理首頁</a>
+    <header class="page-header">
+      <p class="eyebrow">POINT REDEMPTION SETTINGS</p>
+      <h1>點數兌換設定</h1>
+      <p>設定會員以點數折抵金額與免費兌換餐點時的換算規則。</p>
+    </header>
+
+    <section class="order-form points-settings-card">
+      {% if saved %}<p class="success-notice">✓ 設定已儲存，前端點餐頁重新整理後會立即套用。</p>{% endif %}
+      <form method="post">
+        <h2>免費兌換餐點／Đổi món miễn phí</h2>
+        <label for="exchange_point_value"><b>1 點可兌換餐點金額／Giá trị 1 điểm đổi món</b></label>
+        <div class="point-value-input">
+          <span>1 點 = NT$</span>
+          <input id="exchange_point_value" name="exchange_point_value" type="number" min="1" max="1000" step="1" value="{{ exchange_point_value }}" required inputmode="numeric">
+        </div>
+        <p class="admin-help">例如設定為 NT$5：餐點原價 NT$150，免費兌換需 <b>30 點</b>；若金額無法整除，所需點數一律無條件進位。</p>
+        <h2>結帳金額折抵／Dùng điểm giảm giá</h2>
+        <label for="cash_point_value"><b>本次使用點數折抵：1 點折抵金額／Giá trị 1 điểm</b></label>
+        <div class="point-value-input">
+          <span>1 點 = NT$</span>
+          <input id="cash_point_value" name="cash_point_value" type="number" min="1" max="1000" step="1" value="{{ cash_point_value }}" required inputmode="numeric">
+        </div>
+        <p class="admin-help">目前預設為 <b>1 點 = NT$1</b>。此規則套用到前端的「本次使用點數折抵／Dùng điểm」。</p>
+        <p class="admin-help">此設定會套用至之後的新訂單；已完成的歷史訂單會保留原本的折抵紀錄。</p>
+        <button class="status-button" type="submit">儲存點數兌換設定</button>
+      </form>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

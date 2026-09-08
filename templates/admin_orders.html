@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <title>{% if is_history %}外帶訂單歷史紀錄{% else %}外帶訂單管理{% endif %}</title>
+</head>
+<body>
+  <main class="page-shell">
+    <a class="back-link" href="{{ url_for('admin') }}">← 返回後台</a>
+    <header class="page-header">
+      <h1>{% if is_history %}外帶訂單歷史紀錄{% else %}外帶訂單管理{% endif %}</h1>
+      <p>{% if is_history %}可用日期搜尋今天以前的訂單。{% else %}只顯示今天的外帶訂單。{% endif %}</p>
+    </header>
+
+    <nav class="page-switch" aria-label="選擇店家訂單">
+      <strong>店家模式：</strong>
+      <a href="{{ url_for('admin_orders_history' if is_history else 'admin_orders', shop='all', date=selected_date) }}" {% if shop_key == 'all' %}aria-current="page"{% endif %}>全部店家</a>
+      {% for key, shop in shops.items() %}
+        ｜<a href="{{ url_for('admin_orders_history' if is_history else 'admin_orders', shop=key, date=selected_date) }}" {% if shop_key == key %}aria-current="page"{% endif %}>{{ shop['name'] }}</a>
+      {% endfor %}
+    </nav>
+
+    {% if is_history %}
+    <form class="order-form" method="get">
+      <input type="hidden" name="shop" value="{{ shop_key }}">
+      <label>搜尋日期
+        <input type="date" name="date" value="{{ selected_date|default('') }}">
+      </label>
+      <button class="button button-primary">搜尋歷史訂單</button>
+      {% if selected_date %}<a class="button" href="{{ url_for('admin_orders_history', shop=shop_key) }}">清除日期篩選</a>{% endif %}
+    </form>
+    {% endif %}
+
+    <p class="page-switch">
+      {% if is_history %}
+        <a href="{{ url_for('admin_orders', shop=shop_key) }}">← 查看今天訂單</a>
+      {% else %}
+        <a href="{{ url_for('admin_orders_history', shop=shop_key) }}">查看歷史紀錄 →</a>
+      {% endif %}
+    </p>
+
+    <p id="live-order-status" class="live-order-status" aria-live="polite">{% if is_history %}歷史紀錄不啟用即時接單。{% else %}即時接單已啟用，系統每 1 秒自動確認新訂單。{% endif %}</p>
+
+    <section id="admin-order-list" class="order-form" data-latest-order-id="{{ orders[0]['id'] if orders else 0 }}">
+      {% for order in orders %}
+      <div class="admin-order">
+        <p><b>#{{ order['shop_order_number'] }}</b>　{{ order['shop_name'] }}　{{ order['customer_name'] }}{% if order['phone'] %}（電話末三碼：{{ order['phone'][-3:] }}）{% endif %}</p>
+        {% set exchange_points = order['points_exchange_points'] if order['points_exchange_points'] is defined else (order['points_exchange_count'] or 0) * 2 %}
+        {% set redemption_value = order['points_redemption_value'] if order['points_redemption_value'] is defined else (order['points_redeemed'] - exchange_points) %}
+        <p><b>餐點原價合計：</b>NT${{ order['subtotal_price'] if order['subtotal_price'] is not none else order['total_price'] + redemption_value }}{% if exchange_points %}　<b>免費兌換：</b>{{ order['points_exchange_count'] }} 樣／{{ exchange_points }} 點{% endif %}{% if redemption_value %}　<b>金額折抵：</b>-NT${{ redemption_value }}{% endif %}　<b>實付：</b>NT${{ order['total_price'] }}</p>
+        <p>下單時間：{{ order['created_at'] }}</p>
+        <p>製作狀態：{{ order['status'] }}　付款狀態：{{ order['payment_status'] }}</p>
+        <div class="order-item-list">
+          <b>餐點明細</b>
+          {% for item in items_by_order.get(order['id'], []) %}
+          <p>{{ item['item_name'] }} × {{ item['quantity'] }}　{{ item['addon_name'] }}　NT${{ item['line_total'] }}</p>
+          {% endfor %}
+        </div>
+        <form class="status-form" method="post" action="{{ url_for('update_order_status', order_id=order['id']) }}">
+          <label>製作狀態
+            <select name="status">
+              {% for s in statuses %}<option {% if s == order['status'] %}selected{% endif %}>{{ s }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>付款狀態
+            <select name="payment_status">
+              <option {% if order['payment_status'] == '待付款' %}selected{% endif %}>待付款</option>
+              <option {% if order['payment_status'] == '已付款' %}selected{% endif %}>已付款</option>
+            </select>
+          </label>
+          <button class="status-button">儲存更新</button>
+        </form>
+      </div>
+      {% else %}
+      <p>{% if is_history %}找不到此店家符合條件的歷史訂單。{% else %}此店家今天目前沒有訂單。{% endif %}</p>
+      {% endfor %}
+
+      <div class="order-day-total">
+        {% if is_history %}搜尋結果{% else %}今日{% endif %}合計：<strong>{{ order_total_count }}</strong> 單　｜　實付金額合計：<strong>NT${{ order_total_amount }}</strong>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+  {% if not is_history %}
+  <script>
+    (() => {
+      const orderList = document.getElementById('admin-order-list');
+      const status = document.getElementById('live-order-status');
+      let latestOrderId = Number(orderList.dataset.latestOrderId || 0);
+      const endpoint = {{ url_for('admin_orders_latest', shop=shop_key)|tojson }};
+
+      async function checkForNewOrder() {
+        try {
+          const response = await fetch(endpoint, { cache: 'no-store' });
+          if (!response.ok) return;
+          const data = await response.json();
+          if (Number(data.latest_id) > latestOrderId) {
+            status.textContent = '收到新外帶訂單，正在更新訂單列表…';
+            window.setTimeout(() => window.location.reload(), 450);
+          }
+        } catch (_) {
+          // Keep the current management page usable even if a single poll fails.
+        }
+      }
+
+      window.setInterval(checkForNewOrder, 1000);
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>

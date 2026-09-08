@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1250" viewBox="0 0 1800 1250" role="img" aria-labelledby="title desc">
+  <title id="title">安嘉之越南美食品在淡水點餐系統分析圖</title>
+  <desc id="desc">呈現消費者、後台管理者、Cloudflare Tunnel、Flask 系統模組與 SQLite 資料庫之間的關係。</desc>
+  <defs>
+    <style>
+      .bg{fill:#fffdfa}.title{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;font-weight:700;fill:#182b35}.subtitle{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;fill:#51616b}.group{fill:#fff;border:2px solid #b8c5c8}.user{fill:#eef8f3;stroke:#23745b}.admin{fill:#fff4ea;stroke:#c9782d}.system{fill:#f5f6ff;stroke:#536baa}.data{fill:#fff7f7;stroke:#c9403f}.external{fill:#f2f6fb;stroke:#4a77a7}.head{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;font-size:25px;font-weight:700;fill:#182b35}.box-title{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;font-size:20px;font-weight:700;fill:#182b35}.body{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;font-size:16px;fill:#2e414a}.small{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;font-size:14px;fill:#51616b}.arrow{stroke:#455a64;stroke-width:3;fill:none;marker-end:url(#arrow)}.dash{stroke:#455a64;stroke-width:2;fill:none;stroke-dasharray:8 6;marker-end:url(#arrow)}.line{stroke:#d5dddf;stroke-width:1}.pill{fill:#fff;stroke:#c9d4d7;stroke-width:1}.footer{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;font-size:15px;fill:#51616b}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#455a64"/></marker>
+  </defs>
+  <rect class="bg" width="1800" height="1250"/>
+  <text x="900" y="58" text-anchor="middle" class="title" font-size="36">安嘉之越南美食品在淡水點餐系統－系統分析圖</text>
+  <text x="900" y="90" text-anchor="middle" class="subtitle" font-size="18">An Gia Vietnamese Food Ordering System｜外帶點餐、會員點數、人工點餐與營運管理</text>
+
+  <rect x="45" y="135" width="300" height="760" rx="18" class="user" stroke-width="2"/>
+  <text x="195" y="180" text-anchor="middle" class="head">消費者端／前台</text>
+  <rect x="75" y="215" width="240" height="86" rx="12" class="pill"/><text x="195" y="250" text-anchor="middle" class="box-title">首頁與三間店舖</text><text x="195" y="278" text-anchor="middle" class="small">河食・麵包・飲品點心</text>
+  <rect x="75" y="325" width="240" height="86" rx="12" class="pill"/><text x="195" y="360" text-anchor="middle" class="box-title">會員帳號</text><text x="195" y="388" text-anchor="middle" class="small">註冊、登入、點數查詢</text>
+  <rect x="75" y="435" width="240" height="86" rx="12" class="pill"/><text x="195" y="470" text-anchor="middle" class="box-title">外帶下單</text><text x="195" y="498" text-anchor="middle" class="small">多品項、加料、備註、付款</text>
+  <rect x="75" y="545" width="240" height="86" rx="12" class="pill"/><text x="195" y="580" text-anchor="middle" class="box-title">點數與訂單</text><text x="195" y="608" text-anchor="middle" class="small">每 NT$50 無條件進位 1 點</text>
+  <rect x="75" y="655" width="240" height="86" rx="12" class="pill"/><text x="195" y="690" text-anchor="middle" class="box-title">我的外帶訂單</text><text x="195" y="718" text-anchor="middle" class="small">今日訂單、歷史日期搜尋</text>
+  <rect x="75" y="765" width="240" height="86" rx="12" class="pill"/><text x="195" y="800" text-anchor="middle" class="box-title">AI 與中越翻譯</text><text x="195" y="828" text-anchor="middle" class="small">越南美食、文化、用語</text>
+
+  <rect x="1455" y="135" width="300" height="760" rx="18" class="admin" stroke-width="2"/>
+  <text x="1605" y="180" text-anchor="middle" class="head">店員／管理者後台</text>
+  <rect x="1485" y="215" width="240" height="86" rx="12" class="pill"/><text x="1605" y="250" text-anchor="middle" class="box-title">人工點餐模式</text><text x="1605" y="278" text-anchor="middle" class="small">無手機顧客、會員手機累點</text>
+  <rect x="1485" y="325" width="240" height="86" rx="12" class="pill"/><text x="1605" y="360" text-anchor="middle" class="box-title">外帶訂單管理</text><text x="1605" y="388" text-anchor="middle" class="small">製作狀態、付款狀態</text>
+  <rect x="1485" y="435" width="240" height="86" rx="12" class="pill"/><text x="1605" y="470" text-anchor="middle" class="box-title">三家店菜單管理</text><text x="1605" y="498" text-anchor="middle" class="small">新增、圖片、介紹、下架</text>
+  <rect x="1485" y="545" width="240" height="86" rx="12" class="pill"/><text x="1605" y="580" text-anchor="middle" class="box-title">每日餐點銷量</text><text x="1605" y="608" text-anchor="middle" class="small">份數與銷售金額</text>
+  <rect x="1485" y="655" width="240" height="86" rx="12" class="pill"/><text x="1605" y="690" text-anchor="middle" class="box-title">歷史營運報表</text><text x="1605" y="718" text-anchor="middle" class="small">折線圖、圓餅圖、日期篩選</text>
+  <rect x="1485" y="765" width="240" height="86" rx="12" class="pill"/><text x="1605" y="800" text-anchor="middle" class="box-title">優惠與商品維護</text><text x="1605" y="828" text-anchor="middle" class="small">指定日期折扣、餐點上下架</text>
+
+  <rect x="410" y="135" width="980" height="760" rx="18" class="system" stroke-width="2"/>
+  <text x="900" y="180" text-anchor="middle" class="head">安嘉之越南美食品在淡水－Flask Web 應用系統</text>
+  <rect x="450" y="215" width="250" height="145" rx="14" class="external" stroke-width="2"/>
+  <text x="575" y="252" text-anchor="middle" class="box-title">公開網路服務</text><line x1="475" y1="269" x2="675" y2="269" class="line"/><text x="575" y="298" text-anchor="middle" class="body">Cloudflare Tunnel</text><text x="575" y="324" text-anchor="middle" class="small">HTTPS、網域、公開連線</text>
+  <rect x="760" y="215" width="250" height="145" rx="14" class="system" stroke-width="2"/>
+  <text x="885" y="252" text-anchor="middle" class="box-title">路由與頁面層</text><line x1="785" y1="269" x2="985" y2="269" class="line"/><text x="885" y="298" text-anchor="middle" class="body">前台、後台、API 路由</text><text x="885" y="324" text-anchor="middle" class="small">RWD 手機版、台灣即時時間</text>
+  <rect x="1070" y="215" width="280" height="145" rx="14" class="external" stroke-width="2"/>
+  <text x="1210" y="252" text-anchor="middle" class="box-title">外部 AI 服務（選用）</text><line x1="1095" y1="269" x2="1325" y2="269" class="line"/><text x="1210" y="298" text-anchor="middle" class="body">OpenAI Responses API</text><text x="1210" y="324" text-anchor="middle" class="small">AI 導覽、中越翻譯</text>
+  <rect x="450" y="420" width="280" height="175" rx="14" class="system" stroke-width="2"/>
+  <text x="590" y="458" text-anchor="middle" class="box-title">訂單與人工點餐模組</text><line x1="475" y1="475" x2="705" y2="475" class="line"/><text x="590" y="505" text-anchor="middle" class="body">多品項購物車、加料、備註</text><text x="590" y="533" text-anchor="middle" class="body">付款／製作狀態、每日銷量</text><text x="590" y="563" text-anchor="middle" class="small">指定日期促銷價格計算</text>
+  <rect x="760" y="420" width="250" height="175" rx="14" class="system" stroke-width="2"/>
+  <text x="885" y="458" text-anchor="middle" class="box-title">會員與點數模組</text><line x1="785" y1="475" x2="985" y2="475" class="line"/><text x="885" y="505" text-anchor="middle" class="body">註冊、登入、密碼規則</text><text x="885" y="533" text-anchor="middle" class="body">1 點折抵 NT$1</text><text x="885" y="563" text-anchor="middle" class="small">每 NT$50 無條件進位 1 點</text>
+  <rect x="1070" y="420" width="280" height="175" rx="14" class="system" stroke-width="2"/>
+  <text x="1210" y="458" text-anchor="middle" class="box-title">菜單與報表模組</text><line x1="1095" y1="475" x2="1325" y2="475" class="line"/><text x="1210" y="505" text-anchor="middle" class="body">三店獨立菜單、圖片管理</text><text x="1210" y="533" text-anchor="middle" class="body">日期搜尋、折線圖、圓餅圖</text><text x="1210" y="563" text-anchor="middle" class="small">商品新增、更新、下架</text>
+  <rect x="570" y="660" width="660" height="180" rx="14" class="data" stroke-width="2"/>
+  <text x="900" y="698" text-anchor="middle" class="box-title">SQLite 資料庫／vietnam_food.db</text><line x1="600" y1="715" x2="1200" y2="715" class="line"/>
+  <text x="620" y="752" class="body">customer_accounts</text><text x="620" y="778" class="small">會員姓名、手機、密碼雜湊、點數</text>
+  <text x="620" y="815" class="body">menu</text><text x="620" y="838" class="small">三店餐點、價格、圖片、介紹、地區</text>
+  <text x="960" y="752" class="body">orders</text><text x="960" y="778" class="small">訂單、付款／製作狀態、點數異動</text>
+  <text x="960" y="815" class="body">order_items、app_settings</text><text x="960" y="838" class="small">餐點明細、加料、促銷設定</text>
+
+  <path d="M345 360 H450" class="arrow"/><text x="365" y="346" class="small">HTTPS</text>
+  <path d="M345 580 H450" class="arrow"/>
+  <path d="M1455 360 H1350" class="arrow"/><text x="1365" y="346" text-anchor="end" class="small">管理操作</text>
+  <path d="M700 288 H760" class="arrow"/><path d="M1010 288 H1070" class="dash"/>
+  <path d="M885 360 V420" class="arrow"/>
+  <path d="M590 595 V660" class="arrow"/><path d="M885 595 V660" class="arrow"/><path d="M1210 595 V660" class="arrow"/>
+  <path d="M1070 315 C1040 350 1020 370 980 420" class="dash"/>
+
+  <rect x="45" y="945" width="1710" height="250" rx="16" class="group"/>
+  <text x="75" y="985" class="head">主要處理流程與資料關連</text>
+  <text x="100" y="1035" class="body">① 消費者／店員選擇店家與餐點</text><text x="520" y="1035" class="body">② 加料、備註、數量與付款資料送出</text><text x="1040" y="1035" class="body">③ Flask 驗證並建立 orders、order_items</text>
+  <text x="100" y="1085" class="body">④ 會員訂單：依實付金額累積點數；可用點數折抵</text><text x="760" y="1085" class="body">⑤ 後台更新付款與製作狀態，產生銷量與歷史報表</text>
+  <text x="100" y="1145" class="footer">實體關連：customer_accounts（會員）→ orders（訂單）→ order_items（訂單明細）；menu（餐點）→ order_items；app_settings（系統設定／促銷）。</text>
+  <text x="100" y="1175" class="footer">圖例：實線箭頭＝主要資料／操作流程；虛線箭頭＝選用外部服務或輔助整合。　系統版本：2026 年 8 月</text>
+  <!-- 2026/08 current feature summary -->
+  <rect x="45" y="1200" width="1710" height="34" rx="10" fill="#edf7f3" stroke="#27846b" stroke-width="1.5"/>
+  <text x="900" y="1223" text-anchor="middle" class="small" fill="#145f4a" font-weight="700">最新功能：三店分流管理、菜單即時同步、供應狀態（供應中／暫停供應）、會員點數與免費兌換、每日銷量與歷史報表</text>
+</svg>

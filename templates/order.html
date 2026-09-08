@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ shop.name }}｜安嘉之越南美食品在淡水</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <a class="back-link" href="/">← 返回三間店舖／Quay lại cửa hàng</a>
+    <header class="page-header">
+      <p class="eyebrow">{{ shop.vi_name }}</p>
+      <h1>{{ shop.name }}</h1>
+      <p>{{ shop.tagline }}<br>僅提供外帶／Chỉ phục vụ mang đi</p>
+    </header>
+
+    {% if promotion_active %}
+    <section class="promotion-banner" aria-label="全品項九折優惠">
+      <strong>2026/08/16（星期日）全品項 9 折！</strong>
+      <span>所有餐點與加料已自動以 9 折計算／Giảm 10% toàn bộ món và topping.</span>
+    </section>
+    {% endif %}
+
+    <form method="post" id="order-form">
+      <section class="order-form menu-panel">
+        <h2>選擇餐點／Chọn món</h2>
+        {% for category, items in menu|groupby('category') %}
+        <section class="menu-section">
+          <h3>{{ category|replace('北部', '')|replace('南部', '') }}</h3>
+          <div class="menu-grid">
+          {% for item in items %}
+            <article class="menu-card{% if item['availability_status'] == '暫停供應' %} menu-unavailable{% endif %}">
+              <img class="menu-photo" src="{{ item['image_url'] or url_for('static', filename=item['photo_file']) }}?v={{ (item['updated_at'] or menu_version)|replace('/', '')|replace(' ', '')|replace(':', '')|replace('.', '') }}" alt="{{ item['name'] }} 餐點圖片" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/menu-placeholder.svg') }}';">
+              <div class="menu-copy">
+                <h4>{{ item['name']|replace('北部', '')|replace('南部', '') }}{% if item['recommendation_tag'] %}<span class="recommendation-badge">（{{ item['recommendation_tag'] }}／{{ recommendation_vi_labels.get(item['recommendation_tag'], '') }}）</span>{% endif %}</h4>
+                {% if shop_key == 'banh-mi' %}<p class="ingredients">食材：{{ ingredients.get(item['vi_name'], '') }}</p><p class="ingredients ingredients-vi">Nguyên liệu: {{ vi_ingredients.get(item['vi_name'], '') }}</p>{% endif %}
+                <p class="vi-name">{{ item['vi_name'] }}</p>
+                {% set region = item['region'] or '全越南常見' %}
+                <p class="region-badge">地區／起源：{{ region }}／{{ region_vi_labels.get(region, '') }}</p>
+                <p class="availability-badge{% if item['availability_status'] == '暫停供應' %} unavailable{% endif %}">供應狀態／Tình trạng: {{ item['availability_status'] or '供應中' }}／{{ availability_vi_labels.get(item['availability_status'] or '供應中', '') }}</p>
+                {% if shop_key != 'banh-mi' %}<p class="dish-description">{{ item['description'] or descriptions.get(item['vi_name'], '以新鮮食材、越南香草與每日熬煮湯頭製作，外帶也保有道地風味。')|replace('北：', '')|replace('南：', '') }}</p><p class="dish-description dish-description-vi">{{ item['vi_description'] or vi_descriptions.get(item['vi_name'], 'Nguyên liệu tươi, rau thơm Việt Nam và nước dùng nấu mỗi ngày.') }}</p>{% endif %}
+                {% if shop_key in ('pho', 'banh-mi', 'drinks') %}
+                {% set ice_only_drink = shop_key == 'drinks' and item['vi_name'].startswith('Cà phê sữa') %}
+                {% set drink_ice_option = shop_key == 'drinks' and (item['category'] in ('越南咖啡', '特色飲品') or ice_only_drink) and item['name'] != '越南三色冰' %}
+                {% set custom_addon_options = item.get('configured_addons', {}) %}
+                {% set hidden_addons = item.get('hidden_addons', []) %}
+                <fieldset class="addon-options{% if not custom_addon_options and shop_key == 'drinks' and (item['category'] in ('越南點心', '越南甜點') or item['name'] == '越南三色冰') %} no-addons{% endif %}">
+                  <legend>{% if custom_addon_options %}加料／Thêm món{% elif drink_ice_option %}冰塊選擇／Chọn đá{% elif shop_key == 'drinks' and item['category'] == '越南咖啡' %}加大／Size lớn{% else %}加料／Thêm món{% endif %}</legend>
+                  {% if custom_addon_options %}
+                  {% for addon_name, addon_price in custom_addon_options.items() %}
+                  {% if addon_name not in hidden_addons %}<label><input class="addon-choice" type="checkbox" value="{{ addon_name }}"> {{ addon_name }}{% if addon_price %} NT${{ addon_price }}{% endif %}</label>{% endif %}
+                  {% endfor %}
+                  {% elif drink_ice_option %}
+                  {% if '原狀（有冰）／Nguyên bản (có đá)' not in hidden_addons %}<label><input class="addon-choice" type="radio" name="ice-{{ item['id'] }}" value="原狀（有冰）／Nguyên bản (có đá)" checked> 原狀（有冰）／Nguyên bản (có đá)</label>{% endif %}
+                  {% if '不加冰／Không đá' not in hidden_addons %}<label><input class="addon-choice" type="radio" name="ice-{{ item['id'] }}" value="不加冰／Không đá" {% if '原狀（有冰）／Nguyên bản (có đá)' in hidden_addons %}checked{% endif %}> 不加冰／Không đá</label>{% endif %}
+                  {% if item['category'] == '越南咖啡' and not ice_only_drink and '加大／Size lớn' not in hidden_addons %}<label><input class="addon-choice" type="checkbox" value="加大／Size lớn"> 加大／Size lớn NT$15</label>{% endif %}
+                  {% elif shop_key == 'drinks' and item['category'] == '越南咖啡' %}
+                  {% if '加大／Size lớn' not in hidden_addons %}<label><input class="addon-choice" type="checkbox" value="加大／Size lớn"> 加大／Size lớn NT$15</label>{% endif %}
+                  {% elif shop_key == 'banh-mi' and '飲品' in item['category'] %}
+                  {% if '原狀（有冰）／Nguyên bản (có đá)' not in hidden_addons %}<label><input class="addon-choice" type="radio" name="ice-{{ item['id'] }}" value="原狀（有冰）／Nguyên bản (có đá)" checked> 原狀（有冰）／Nguyên bản (có đá)</label>{% endif %}
+                  {% if '不加冰／Không đá' not in hidden_addons %}<label><input class="addon-choice" type="radio" name="ice-{{ item['id'] }}" value="不加冰／Không đá" {% if '原狀（有冰）／Nguyên bản (có đá)' in hidden_addons %}checked{% endif %}> 不加冰／Không đá</label>{% endif %}
+                  {% if '加大／Size lớn' not in hidden_addons %}<label><input class="addon-choice" type="checkbox" value="加大／Size lớn"> 加大／Size lớn NT$15</label>{% endif %}
+                  {% else %}
+                  {% for addon_name, addon_price in addons.items() %}
+                  {% set special_addon = special_addons.get(item['vi_name']) %}
+                  {% if addon_name in hidden_addons %}
+                  {% elif shop_key == 'banh-mi' and special_addon == '加顆粒花生醬／Thêm bơ đậu phộng hạt' and addon_name != special_addon %}
+                  {% elif shop_key == 'banh-mi' and special_addon == '加顆粒花生醬／Thêm bơ đậu phộng hạt' and addon_name == special_addon %}
+                  <label><input class="addon-choice" type="checkbox" value="{{ addon_name }}"> {{ addon_name }} NT$15</label>
+                  {% elif shop_key == 'banh-mi' and addon_name == '加醃蘿蔔／Thêm đồ chua' and item['category'] == '越南飲品' %}
+                  {% elif shop_key == 'banh-mi' and ('冰' in addon_name or '加大' in addon_name) %}
+                  {% elif shop_key == 'banh-mi' and addon_name == '加肉／Thêm thịt' and (item['vi_name'].startswith('Bánh mì chay') or item['vi_name'].startswith('Bánh mì đậu hũ') or item['vi_name'].startswith('Bánh mì trứng')) %}
+                  {% elif addon_name in special_addons.values() %}
+                  {% elif addon_name == '加肉／Thêm thịt' and special_addon %}
+                  <label><input class="addon-choice" type="checkbox" value="{{ special_addon }}"> {{ special_addon }} NT$30</label>
+                  {% else %}
+                    {% if '加主食' in addon_name %}
+                    {% set staple = '河粉／Bánh phở' if item['vi_name'].startswith('Phở') else '米線／Bún' if item['vi_name'].startswith('Bún') else '粿條／Hủ Tiếu' if item['vi_name'].startswith('Hủ Tiếu') else '米苔目／Bánh Canh' %}
+                    <label><input class="addon-choice" type="checkbox" value="{{ addon_name }}"> 加主食：{{ staple }} NT${{ addon_price }}</label>
+                    {% else %}
+                    <label><input class="addon-choice" type="checkbox" value="{{ addon_name }}"> {{ addon_name }}{% if addon_price %} NT${{ addon_price }}{% endif %}</label>
+                    {% endif %}
+                  {% endif %}
+                  {% endfor %}
+                  {% endif %}
+                </fieldset>
+                <label class="item-note-label">備註／Ghi chú（選填）<textarea class="item-note" maxlength="100" placeholder="例如：不加香菜、少辣、醬料另外放"></textarea></label>
+                {% endif %}
+                <p class="price">NT${{ item['price'] }}</p>
+              </div>
+              {% if item['availability_status'] == '暫停供應' %}
+              <button class="add-item" type="button" disabled>暫停供應<br>Tạm hết hàng</button>
+              {% else %}
+              <button class="add-item" type="button" data-id="{{ item['id'] }}" data-name="{{ item['name'] }}" data-price="{{ item['price'] }}" data-addon-prices='{{ (item.get("configured_addons") or addons)|tojson }}'>加入<br>Thêm</button>
+              {% if customer %}{% set exchange_need = ((item['price'] + exchange_point_value - 1) // exchange_point_value) %}<button class="exchange-item" type="button" data-id="{{ item['id'] }}" data-name="{{ item['name'] }}" data-price="{{ item['price'] }}" data-exchange-points="{{ exchange_need }}" data-addon-prices='{{ (item.get("configured_addons") or addons)|tojson }}'>{{ exchange_need }} 點免費換<br>Đổi {{ exchange_need }} điểm</button>{% endif %}
+              {% endif %}
+            </article>
+          {% endfor %}
+          </div>
+        </section>
+        {% endfor %}
+      </section>
+
+      <aside class="order-form cart-panel">
+        <h2>購物車／Giỏ hàng</h2>
+        <div id="cart-list">尚未加入餐點。<br>Chưa có món nào.</div>
+        <p class="cart-total">餐點原價合計／Tổng giá món：<b id="cart-original-total">NT$0</b></p>
+        <p class="cart-total" id="promotion-row" hidden>活動折扣／Giảm giá：<b id="cart-promotion">NT$0</b></p>
+        <p class="cart-total" id="points-row" hidden>點數折抵／Dùng điểm：<b id="cart-points">-NT$0</b></p>
+        <p class="cart-total">實付金額／Thanh toán：<b id="cart-total">NT$0</b></p>
+        {% if customer %}
+        <section class="points-panel" aria-label="會員點數">
+          <strong>會員點數／Điểm thưởng</strong>
+          <p>目前可用：<b>{{ available_points }}</b> 點（本次金額折抵：1 點 = NT${{ cash_point_value }}）</p>
+          <p>免費換餐點時，商品本體所需點數＝餐點價格 ÷ NT${{ exchange_point_value }}，無條件進位；付費加料可再用下方點數折抵。<br>Đổi món miễn phí: giá món ÷ NT${{ exchange_point_value }} mỗi điểm, làm tròn lên; món thêm có thể dùng điểm giảm giá bên dưới.</p>
+          <label for="points_to_redeem">本次使用點數折抵／Dùng điểm</label>
+          <input id="points_to_redeem" name="points_to_redeem" type="number" min="0" max="{{ available_points }}" value="0" inputmode="numeric">
+          <small id="points-summary">每消費 NT$50 累積 1 點，未滿 NT$50 無條件進位。</small>
+        </section>
+        {% else %}
+        <p class="points-login-note">登入會員即可累積點數與使用折抵。<br>Đăng nhập để tích điểm và đổi điểm.</p>
+        {% endif %}
+        <input id="cart" name="cart" type="hidden">
+        <label for="customer_name">取餐姓名／Tên nhận món</label>
+        <input id="customer_name" name="customer_name" required value="{{ customer.name if customer else '' }}" {% if customer %}readonly{% endif %}>
+        <label for="phone">手機號碼／Số điện thoại</label>
+        <input id="phone" name="phone" inputmode="tel" autocomplete="tel" pattern="[0-9+ -]{8,20}" required value="{{ customer.phone if customer else '' }}" {% if customer %}readonly{% endif %}>
+        <label for="pay_method">付款方式／Thanh toán</label>
+        <input id="pay_method" name="pay_method" value="現金／Tiền mặt" readonly>
+        <button class="button button-primary" type="submit">送出外帶訂單／Đặt món</button>
+      </aside>
+    </form>
+    <section class="shop-address" aria-label="店家地址" style="margin:1.25rem 0 0;padding:1rem 1.1rem;border-top:3px solid #287a61;background:#f5f0e8;border-radius:12px;">
+      <strong>店家地址／Địa chỉ quán</strong>
+      <p>{{ shop_address }}</p>
+    </section>
+    <div id="menu-sync-notice" class="menu-sync-notice" hidden aria-live="polite">
+      菜單已由店家更新。為保留您目前的購物車，請完成選餐後再按更新。<br>
+      Thực đơn đã được cập nhật. Hãy hoàn tất giỏ hàng rồi nhấn cập nhật.
+      <button type="button" id="menu-sync-reload">更新菜單／Cập nhật</button>
+    </div>
+  </main>
+  <script>
+    const addons={{ addons|tojson }}, cart=[];
+    const list=document.querySelector('#cart-list'), total=document.querySelector('#cart-total'), hidden=document.querySelector('#cart');
+    const originalTotalEl=document.querySelector('#cart-original-total'), promotionRow=document.querySelector('#promotion-row'), promotionEl=document.querySelector('#cart-promotion'), pointsRow=document.querySelector('#points-row'), pointsEl=document.querySelector('#cart-points');
+    const pointsInput=document.querySelector('#points_to_redeem'), pointsSummary=document.querySelector('#points-summary');
+    const availablePoints={{ available_points|default(0)|int }};
+    function renderCart(){
+      hidden.value=JSON.stringify(cart.map(({food_id,quantity,addon_names,note,exchange_with_points})=>({food_id,quantity,addon_names,note,exchange_with_points})));
+      list.innerHTML=cart.length ? cart.map((x,i)=>`<div class="cart-row"><span>${x.name} × ${x.quantity}${x.exchange_with_points ? `　<b>【${x.exchange_points}點免費兌換】</b>` : ''}<small>${x.addon_names.join('、')}${x.note ? '；備註：'+x.note : ''}</small></span><button type="button" data-remove="${i}">移除</button></div>`).join('') : '尚未加入餐點。<br>Chưa có món nào.';
+      const itemAmount=(x,discounted=false)=>{
+        const addonTotal=x.addon_names.reduce((n,name)=>n+(x.addon_prices?.[name] ?? addons[name] ?? 0),0);
+        const amount=x.price+addonTotal;
+        return discounted ? Math.round(amount*0.9) : amount;
+      };
+      const originalTotal=cart.reduce((sum,x)=>sum+itemAmount(x)*x.quantity,0);
+      const promotionActive={{ 'true' if promotion_active else 'false' }};
+      const exchangeCount=cart.filter(x=>x.exchange_with_points).reduce((sum,x)=>sum+x.quantity,0);
+      const exchangePoints=cart.filter(x=>x.exchange_with_points).reduce((sum,x)=>sum+(x.exchange_points*x.quantity),0);
+      const orderBeforeExchange=cart.reduce((sum,x)=>sum+itemAmount(x,promotionActive)*x.quantity,0);
+      const exchangedDishValue=cart.filter(x=>x.exchange_with_points).reduce((sum,x)=>sum+(promotionActive ? Math.round(x.price*0.9) : x.price)*x.quantity,0);
+      // A free exchange covers the menu item only.  Paid add-ons remain in
+      // the payable total so they can also be offset by ordinary reward points.
+      const finalTotal=Math.max(0,orderBeforeExchange-exchangedDishValue);
+      let pointsUsed=0, pointsValue=0;
+      if(pointsInput){
+        const pointsNeeded=Math.ceil(finalTotal/{{ cash_point_value }});
+        pointsUsed=Math.max(0,Math.min(availablePoints-exchangePoints,pointsNeeded,Math.floor(Number(pointsInput.value)||0)));
+        pointsInput.value=pointsUsed;
+        pointsValue=Math.min(finalTotal,pointsUsed*{{ cash_point_value }});
+      }
+      const payableTotal=finalTotal-pointsValue;
+      originalTotalEl.textContent='NT$'+originalTotal;
+      promotionRow.hidden=!promotionActive || originalTotal===orderBeforeExchange;
+      promotionEl.textContent='-NT$'+Math.max(0,originalTotal-orderBeforeExchange);
+      pointsRow.hidden=!pointsUsed && !exchangeCount;
+      pointsEl.textContent=`兌換 ${exchangeCount} 樣（${exchangePoints} 點）${pointsUsed ? `；${pointsUsed} 點折抵 -NT$${pointsValue}` : ''}`;
+      total.textContent='NT$'+payableTotal;
+      if(pointsSummary){
+        const earned=payableTotal>0 ? Math.ceil(payableTotal/50) : 0;
+        pointsSummary.textContent=`免費兌換 ${exchangeCount} 樣使用 ${exchangePoints} 點；${pointsUsed} 點折抵 NT$${pointsValue}（1 點 = NT${{ cash_point_value }}），實付 NT$${payableTotal}，預估累積 ${earned} 點。`;
+      }
+    }
+    document.querySelectorAll('.add-item,.exchange-item').forEach(button=>button.addEventListener('click',()=>{
+      // 每次加入都建立一筆獨立餐點明細，讓同一菜色的每一份都能有不同加料與備註。
+      const card=button.closest('.menu-card'), addon_names=[...card.querySelectorAll('.addon-choice:checked')].map(input=>input.value), note=card.querySelector('.item-note').value.trim();
+      let addon_prices={};
+      try{addon_prices=JSON.parse(button.dataset.addonPrices||'{}');}catch(error){addon_prices={};}
+      cart.push({food_id:Number(button.dataset.id),name:button.dataset.name,price:Number(button.dataset.price),exchange_points:Number(button.dataset.exchangePoints)||2,quantity:1,addon_names: addon_names.length ? addon_names : ['無加料／Không thêm'],addon_prices,note,exchange_with_points:button.classList.contains('exchange-item')});
+      renderCart();
+    }));
+    list.addEventListener('click',event=>{if(event.target.dataset.remove!==undefined){cart.splice(Number(event.target.dataset.remove),1);renderCart();}});
+    if(pointsInput){pointsInput.addEventListener('input',renderCart);}
+    document.querySelector('#order-form').addEventListener('submit',event=>{if(!cart.length){event.preventDefault();alert('請先加入至少一項餐點。');}});
+
+    // 後台更新菜單後，前端最多約十秒同步一次；已有購物車時不強制重整。
+    let menuVersion={{ menu_version|tojson }}, menuUpdateFound=false;
+    const menuSyncNotice=document.querySelector('#menu-sync-notice');
+    document.querySelector('#menu-sync-reload').addEventListener('click',()=>window.location.reload());
+    async function checkMenuUpdate(){
+      if(menuUpdateFound) return;
+      try{
+        const response=await fetch('{{ url_for('shop_menu_version', shop_key=shop_key) }}',{cache:'no-store'});
+        const payload=await response.json();
+        if(payload.version!==menuVersion){
+          menuUpdateFound=true;
+          if(cart.length){menuSyncNotice.hidden=false;}
+          else{window.location.reload();}
+        }
+      }catch(error){/* 網路短暫中斷時保留目前點餐畫面。 */}
+    }
+    window.setInterval(checkMenuUpdate,10000);
+  </script>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

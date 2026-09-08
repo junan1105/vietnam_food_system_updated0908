@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>安嘉後台管理</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ADMIN DASHBOARD</p>
+      <h1>後台管理</h1>
+      <p>請選擇要管理的內容。</p>
+    </header>
+    <section class="admin-choice-grid">
+      <a class="admin-choice" href="{{ url_for('admin_manual_order') }}">
+        <span>🧾</span><h2>人工點餐模式</h2><p>現場顧客沒有手機時，由店員代為建立外帶訂單</p>
+      </a>
+      <a class="admin-choice" href="{{ url_for('admin_menu') }}">
+        <span>🍜</span><h2>菜單即時管理</h2><p>圖片、菜名、介紹、價格</p>
+      </a>
+      <a class="admin-choice" href="{{ url_for('admin_orders') }}">
+        <span>📋</span><h2>外帶訂單管理</h2><p>查看訂單與更新製作、付款狀態</p>
+      </a>
+      <a class="admin-choice" href="{{ url_for('admin_points_settings') }}">
+        <span>⭐</span><h2>點數兌換設定</h2><p>隨時設定 1 點可折抵的金額，免費換餐點所需點數會自動重算。</p>
+      </a>
+      <a class="admin-choice" href="{{ url_for('admin_history_report') }}">
+        <span>📊</span><h2>三店總覽報表</h2><p>含當天與歷史資料的三店營收趨勢與占比。</p>
+      </a>
+      {% for key, store in shops.items() %}
+      <a class="admin-choice" href="{{ url_for('admin_history_report', shop_key=key) }}">
+        <span>📈</span><h2>{{ store.name }}營運報表</h2><p>獨立查看此店含當天的歷史營收與訂單資料。</p>
+      </a>
+      <a class="admin-choice" href="{{ url_for('admin_daily_sales', shop_key=key) }}">
+        <span>🧾</span><h2>{{ store.name }}每日銷量</h2><p>獨立查看每日每一道菜的售出份數與金額。</p>
+      </a>
+      {% endfor %}
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

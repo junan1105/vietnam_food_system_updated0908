@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if mode == 'register' %}註冊帳號{% else %}登入帳號{% endif %}｜安嘉之越南美食品在淡水</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell account-page">
+    <a class="back-link" href="{{ url_for('welcome') }}">← 返回使用者首頁</a>
+    <section class="order-form account-card">
+      {% if mode == 'register' %}
+        <p class="eyebrow">CUSTOMER ACCOUNT</p>
+        <h1>註冊帳號</h1>
+        <p>建立帳號後，點餐時會自動帶入姓名與手機號碼。</p>
+      {% else %}
+        <p class="eyebrow">CUSTOMER ACCOUNT</p>
+        <h1>登入帳號</h1>
+        <p>登入後可快速查看自己的外帶訂單。</p>
+      {% endif %}
+      {% if error %}<p class="account-error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" class="account-form">
+        {% if mode == 'register' %}
+        <label>姓名／Tên khách hàng
+          <input name="display_name" maxlength="30" autocomplete="name" required value="{{ request.form.get('display_name', '') }}">
+        </label>
+        {% endif %}
+        <label>手機號碼／Số điện thoại
+          <input name="phone" inputmode="tel" autocomplete="tel" pattern="[0-9+ -]{8,20}" required value="{{ request.form.get('phone', '') }}">
+        </label>
+        <label>密碼／Mật khẩu
+          <span class="password-input-wrap"><input id="password" name="password" type="password" minlength="{% if mode == 'register' %}8{% else %}4{% endif %}" autocomplete="{% if mode == 'register' %}new-password{% else %}current-password{% endif %}" {% if mode == 'register' %}data-strong-password aria-describedby="password-rules"{% endif %} required><button class="password-toggle" type="button" data-password-toggle="password" aria-label="顯示密碼" title="顯示密碼">👁</button></span>
+        </label>
+        {% if mode == 'register' %}
+        <label>再次確認密碼／Xác nhận mật khẩu
+          <span class="password-input-wrap"><input id="confirm_password" name="confirm_password" type="password" minlength="8" autocomplete="new-password" data-confirm-password required><button class="password-toggle" type="button" data-password-toggle="confirm_password" aria-label="顯示再次確認密碼" title="顯示再次確認密碼">👁</button></span>
+        </label>
+        <p id="password-rules" class="account-switch">密碼至少 8 碼，並包含：1 個英文大寫字母、1 個英文小寫字母、1 個特殊符號（例如 <code>! @ # $ %</code>）。</p>
+        {% endif %}
+        <button class="button button-primary" type="submit">{% if mode == 'register' %}完成註冊{% else %}登入{% endif %}</button>
+      </form>
+      {% if mode == 'register' %}
+        <p class="account-switch">已有帳號？<a href="{{ url_for('login_account') }}">前往登入</a></p>
+      {% else %}
+        <p class="account-switch">還沒有帳號？<a href="{{ url_for('register_account') }}">立即註冊</a></p>
+      {% endif %}
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+  {% if mode == 'register' %}
+  <script>
+    const passwordInput = document.querySelector('[data-strong-password]');
+    const confirmInput = document.querySelector('[data-confirm-password]');
+    function validatePasswords(){
+      const valid = passwordInput.value.length >= 8
+        && /[A-Z]/.test(passwordInput.value)
+        && /[a-z]/.test(passwordInput.value)
+        && /[^A-Za-z0-9]/.test(passwordInput.value);
+      passwordInput.setCustomValidity(valid ? '' : '密碼至少 8 碼，且須包含英文大寫、小寫與特殊符號。');
+      confirmInput.setCustomValidity(confirmInput.value && confirmInput.value !== passwordInput.value ? '兩次輸入的密碼不一致。' : '');
+    }
+    passwordInput.addEventListener('input', validatePasswords);
+    confirmInput.addEventListener('input', validatePasswords);
+  </script>
+  {% endif %}
+  <script>
+    document.querySelectorAll('[data-password-toggle]').forEach(button => button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.passwordToggle);
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      button.textContent = show ? '🙈' : '👁';
+      button.setAttribute('aria-label', show ? '隱藏密碼' : '顯示密碼');
+      button.title = button.getAttribute('aria-label');
+    }));
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ shop.name if shop else '三店總覽' }}每日餐點銷量｜安嘉後台管理</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    .sales-filter{display:flex;flex-wrap:wrap;gap:.8rem;align-items:end;margin-bottom:1rem}.sales-filter label{margin:0}.sales-summary{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem}.sales-summary p{display:flex;flex:1 1 180px;justify-content:space-between;gap:1rem;margin:0;padding:.8rem;background:#f5f0e8;border-radius:10px}.sales-summary span{color:#d94a43;font-weight:800}.sales-table-wrap{overflow-x:auto}.sales-table{width:100%;min-width:560px;border-collapse:collapse}.sales-table th,.sales-table td{padding:.8rem;text-align:left;border-bottom:1px solid #ded6cb}.sales-table th{color:#1d765c;background:#f5f0e8}.sales-table td:nth-child(3),.sales-table td:nth-child(4){white-space:nowrap;font-weight:700}
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    {% if is_admin %}
+    <a class="back-link" href="{{ url_for('admin') }}">← 返回安嘉後台管理首頁</a>
+    {% else %}
+    <a class="back-link" href="{{ url_for('welcome') }}">← 返回使用者首頁</a>
+    {% endif %}
+    <header class="page-header">
+      <p class="eyebrow">DAILY SALES REPORT</p>
+      <h1>{{ shop.name if shop else '三店總覽' }}每日餐點銷量</h1>
+      <p>依已成立外帶訂單統計每一道菜當天賣出的份數與金額。可查詢當天或指定日期。</p>
+    </header>
+    <form class="order-form sales-filter" method="get">
+      <label>查詢日期
+        <input type="date" name="date" value="{{ selected_date }}">
+      </label>
+      <button class="status-button" type="submit">查詢銷量</button>
+    </form>
+    {% if is_admin %}
+    <nav class="report-store-nav" aria-label="切換店別銷量頁面">
+      <a href="{{ url_for('admin_daily_sales') }}" {% if shop_key == 'all' %}aria-current="page"{% endif %}>三店總覽</a>
+      {% for key, store in shops.items() %}<a href="{{ url_for('admin_daily_sales', shop_key=key) }}" {% if shop_key == key %}aria-current="page"{% endif %}>{{ store.name }}</a>{% endfor %}
+    </nav>
+    {% endif %}
+    <section class="order-form">
+      <div class="sales-summary">
+        <p><b>總售出份數</b><span>{{ total_portions }} 份</span></p>
+        {% if is_admin %}
+        <p><b>餐點總金額</b><span>NT${{ total_amount }}</span></p>
+        {% endif %}
+      </div>
+      <div class="sales-table-wrap">
+        <table class="sales-table">
+          <thead><tr>{% if shop_key == 'all' %}<th>店家</th>{% endif %}<th>餐點</th><th>售出份數</th>{% if is_admin %}<th>餐點金額</th>{% endif %}</tr></thead>
+          <tbody>
+          {% for sale in sales %}
+            <tr>{% if shop_key == 'all' %}<td>{{ sale['shop_name'] }}</td>{% endif %}<td>{{ sale['item_name'] }}</td><td>{{ sale['quantity_sold'] }} 份</td>{% if is_admin %}<td>NT${{ sale['sales_amount'] }}</td>{% endif %}</tr>
+          {% else %}
+            <tr><td colspan="{% if is_admin %}{% if shop_key == 'all' %}4{% else %}3{% endif %}{% else %}3{% endif %}">這一天尚無已成立的外帶訂單。</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='clock.js') }}"></script>
+</body>
+</html>

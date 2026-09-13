@@ -1,14 +1,7 @@
-# 已更新的越南小吃外帶系統
 
-包含：
-
-- 一張訂單可加入多種餐點
-- 取餐姓名（不含桌號）
-- 每筆訂單西元日期 `YYYY/MM/DD`
-- 後台手動更新「已接單／製作中／已完成可領取」
+系統檔案完整版下載連結，https://drive.google.com/drive/folders/1-iOOaTePYz7AT5D0nL8B7HzbJUlovZBR?usp=drive_link
 
 ## 在 VS Code 開啟與執行
-
 1. 在 VS Code 選擇「檔案 → 開啟資料夾」。
 2. 選擇本資料夾。
 3. 開啟終端機並執行：
